@@ -16,11 +16,6 @@ app.use(express.json())
 app.use(express.text())
 app.use(express.static('public'))
 console.log(process.env.API_KEY)
-//let db;
-//const connection = new SQLiteCloudConnection({
-//  databaseURL: `sqlitecloud://ckwwhzstnk.g1.sqlite.cloud:8860/chinook.sqlite?apikey=9ftTMPmhwKGkOYLEe82SSGcWc0uggDdCbdtOrZKXLtI`
-//  });
-////const result = db.sql`SELECT * FROM <tablename>;`;
 const db = new Database(`sqlitecloud://ckwwhzstnk.g1.sqlite.cloud:8860/pricefinder?apikey=${process.env.APIKEY}`)
 // Ensure the table exists before handling requests
 async function createTableIfNotExists() {
@@ -106,29 +101,45 @@ app.get('/CoreLogic/:address', async (request, response) => {
       Latitude: json2.data.property.detail.geolocation.latitude,
       Longitude: json2.data.property.detail.geolocation.longitude
     };
-    // Insert the property data into the properties table
-    await db.sql`
-    INSERT INTO properties (
-      CreatedAt, propertyID, Low_Estimate, High_Estimate, Estimate_Confidence, Valuation_Date,
-      OtherDetails, DaysOnMarket, ListedPrice, Description, LandArea,
-      LastSoldDate, LastSoldPrice, LastSoldTranferID, Latitude, Longitude
-    )
-    VALUES (
-      CURRENT_DATE, 
-      ${propertyData.propertyID}, ${propertyData.Low_Estimate}, ${propertyData.High_Estimate}, 
-      ${propertyData.Estimate_Confidence}, ${propertyData.Valuation_Date}, 
-      ${propertyData.OtherDetails}, ${propertyData.DaysOnMarket}, ${propertyData.ListedPrice}, 
-      ${propertyData.Description}, ${propertyData.LandArea}, 
-      ${propertyData.LastSoldDate}, ${propertyData.LastSoldPrice}, 
-      ${propertyData.LastSoldTranferID}, ${propertyData.Latitude}, ${propertyData.Longitude}
-    );
-  `;
-  console.log('New property inserted into the database');
-  return response.json({ message: 'Property data inserted into the database', propertyData });
+    // Send the response to the client immediately
+    response.json({
+      message: 'Property data received and inserted into the database',
+      propertyData
+    });
+
+    // Now proceed to insert data into the database asynchronously after the response has been sent
+    // This operation is done asynchronously, so it doesn't block the response to the client
+    setImmediate(async () => {
+      try {
+        // Connect to the SQLiteCloud database
+        await db.connect()
+        // Insert the property data into the properties table
+        await db.sql`
+        INSERT INTO properties (
+          CreatedAt, propertyID, Low_Estimate, High_Estimate, Estimate_Confidence, Valuation_Date,
+          OtherDetails, DaysOnMarket, ListedPrice, Description, LandArea,
+          LastSoldDate, LastSoldPrice, LastSoldTranferID, Latitude, Longitude
+        )
+        VALUES (
+          CURRENT_DATE, 
+          ${propertyData.propertyID}, ${propertyData.Low_Estimate}, ${propertyData.High_Estimate}, 
+          ${propertyData.Estimate_Confidence}, ${propertyData.Valuation_Date}, 
+          ${propertyData.OtherDetails}, ${propertyData.DaysOnMarket}, ${propertyData.ListedPrice}, 
+          ${propertyData.Description}, ${propertyData.LandArea}, 
+          ${propertyData.LastSoldDate}, ${propertyData.LastSoldPrice}, 
+          ${propertyData.LastSoldTranferID}, ${propertyData.Latitude}, ${propertyData.Longitude}
+        );
+      `;
+   console.log('New property inserted into the database');
+      } catch (dbError) {
+        console.error('Error inserting data into the database:', dbError);
+      }
+    });
+
   } catch (error) {
-    console.error("Error fetching data:", error);
+    console.error("Error fetching or inserting data:", error);
     return response.status(500).json({ message: "Internal Server Error" });
   }
-})
+});
 export default app;
 
