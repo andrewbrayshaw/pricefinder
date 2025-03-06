@@ -18,21 +18,6 @@ app.use(express.static('public'))
 console.log(process.env.API_KEY)
 //const db = new Database(process.env.DATABASE_URL)
 
-function getDatabase() {
-  if (!db || !db.isConnected()) {
-    db = new Database(process.env.DATABASE_URL, (error) => {
-      if (error) {
-        console.log("Error during the connection", error);
-      } else {
-        console.log("Connected to the database");
-      }
-    });
-  }
-
-  return db;
-}
-
-
 // Ensure the table exists before handling requests
 async function createTableIfNotExists() {
   try {
@@ -128,6 +113,20 @@ app.get('/CoreLogic/:address', async (request, response) => {
     setImmediate(async () => {
       try {
         // Connect to the SQLiteCloud database
+        function getDatabase() {
+          if (!db || !db.isConnected()) {
+            db = new Database(process.env.DATABASE_URL, (error) => {
+              if (error) {
+                console.log("Error during the connection", error);
+              } else {
+                console.log("Connected to the database");
+              }
+            });
+          }
+        
+          return db;
+        }
+
         //await db.connect()
         // Insert the property data into the properties table
         await getDatabase.sql`
