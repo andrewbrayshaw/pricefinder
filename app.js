@@ -16,7 +16,7 @@ app.use(express.json())
 app.use(express.text())
 app.use(express.static('public'))
 console.log(process.env.API_KEY)
-const db = new Database({process.env.DATABASE_URL)
+const db = new Database(process.env.DATABASE_URL)
 // Ensure the table exists before handling requests
 async function createTableIfNotExists() {
   try {
