@@ -17,53 +17,60 @@ app.use(express.static('public'))
 console.log(process.env.API_KEY)
 let db;
 //const db = new Database(process.env.DATABASE_URL)
-async function connectToDb() {
-  if (!db || !await db.isConnected()) {
-    try {
-      db = new Database(process.env.DATABASE_URL);
-      // Since SQLiteCloud automatically connects when you make a query,
-      // you don't need to manually connect, but let's ensure the connection is valid.
+
+const db = new Database(process.env.DATABASE_URL)
+
+const fetchAlbums = async () => await db.sql`USE DATABASE chinook.sqlite; SELECT * FROM albums;`;
+
+fetchAlbums().then((albums) => console.log(albums));
+
+//async function connectToDb() {
+//  if (!db || !await db.isConnected()) {
+//    try {
+//      db = new Database(process.env.DATABASE_URL);
+//      // Since SQLiteCloud automatically connects when you make a query,
+//      // you don't need to manually connect, but let's ensure the connection is valid.
       //await db.sql('SELECT *'); // Just making a simple query to check the connection.
-      console.log("Connected to the database");
-    } catch (error) {
-      console.error("Error during the connection:", error);
-      throw error;  // Rethrow the error after logging it
-    }
-  }
-  return db;
-}
+//      console.log("Connected to the database");
+//    } catch (error) {
+//      console.error("Error during the connection:", error);
+//      throw error;  // Rethrow the error after logging it
+//    }
+//  }
+//  return db;
+//}
 // Ensure the table exists before handling requests
-async function createTableIfNotExists() {
-  try {
+//async function createTableIfNotExists() {
+ // try {
     // Execute the SQL query
-    await connectToDb()
-    await db.sql`
-    CREATE TABLE IF NOT EXISTS properties (
-        ID INTEGER PRIMARY KEY AUTOINCREMENT, -- Automatically increments for each row
-        CreatedAt DATE DEFAULT (CURRENT_DATE)
-        propertyID INTEGER, -- Provided by external API
-        Low_Estimate INTEGER, -- Whole number (no decimals)
-        High_Estimate INTEGER, -- Whole number (no decimals)
-        Estimate_Confidence TEXT, -- High, Medium, Low (stored as text)
-        Valuation_Date DATE, -- Date format (YYYY-MM-DD)
-        OtherDetails TEXT, -- Additional information (string)
-        DaysOnMarket INTEGER, -- Whole number (days on market)
-        ListedPrice INTEGER, -- Whole number (no decimals)
-        Description TEXT, -- Description of the property
-        LandArea INTEGER, -- Land area in square meters, for example
-        LastSoldDate DATE, -- Date format (YYYY-MM-DD)
-        LastSoldPrice INTEGER, -- Last sold price (whole number)
-        LastSoldTranferID TEXT, -- Transfer ID of the last sale (string)
-        Latitude REAL, -- Latitude (decimal)
-        Longitude REAL -- Longitude (decimal)
-      );`//`SELECT * FROM customers LIMIT 10;`;
+ //   await connectToDb()
+ //   await db.sql`
+ //   CREATE TABLE IF NOT EXISTS properties (
+  //      ID INTEGER PRIMARY KEY AUTOINCREMENT, -- Automatically increments for each row
+   //     CreatedAt DATE DEFAULT (CURRENT_DATE)
+    //    propertyID INTEGER, -- Provided by external API
+    //    Low_Estimate INTEGER, -- Whole number (no decimals)
+     //   High_Estimate INTEGER, -- Whole number (no decimals)
+      //  Estimate_Confidence TEXT, -- High, Medium, Low (stored as text)
+       // Valuation_Date DATE, -- Date format (YYYY-MM-DD)
+      //  OtherDetails TEXT, -- Additional information (string)
+     //   DaysOnMarket INTEGER, -- Whole number (days on market)
+    ///    ListedPrice INTEGER, -- Whole number (no decimals)
+   //     Description TEXT, -- Description of the property
+   //     LandArea INTEGER, -- Land area in square meters, for example
+   //     LastSoldDate DATE, -- Date format (YYYY-MM-DD)
+   //     LastSoldPrice INTEGER, -- Last sold price (whole number)
+  //      LastSoldTranferID TEXT, -- Transfer ID of the last sale (string)
+  //      Latitude REAL, -- Latitude (decimal)
+  //      Longitude REAL -- Longitude (decimal)
+  //    );`//`SELECT * FROM customers LIMIT 10;`;
 
     // Print the results
-    console.log('Table "properties" is ready or already exists.');
-  } catch (error) {
-    console.error('Error creating table:', error);
-  }
-}
+    //console.log('Table "properties" is ready or already exists.');
+ // } catch (error) {
+ //   console.error('Error creating table:', error);
+ // }/
+//}
 // Create the table when the application starts
 //createTableIfNotExists();
 
@@ -125,39 +132,6 @@ app.get('/CoreLogic/:address', async (request, response) => {
 
     // Now proceed to insert data into the database asynchronously after the response has been sent
     // This operation is done asynchronously, so it doesn't block the response to the client
-    setImmediate(async () => {
-      try {
-        // Connect to the SQLiteCloud database
-
-        await connectToDb()
-        await createTableIfNotExists()
-        // Insert the property data into the properties table
-        await db.sql`
-        INSERT INTO properties (
-          CreatedAt, propertyID, Low_Estimate, High_Estimate, Estimate_Confidence, Valuation_Date,
-          OtherDetails, DaysOnMarket, ListedPrice, Description, LandArea,
-          LastSoldDate, LastSoldPrice, LastSoldTranferID, Latitude, Longitude
-        )
-        VALUES (
-          CURRENT_DATE, 
-          ${propertyData.propertyID}, ${propertyData.Low_Estimate}, ${propertyData.High_Estimate}, 
-          ${propertyData.Estimate_Confidence}, ${propertyData.Valuation_Date}, 
-          ${propertyData.OtherDetails}, ${propertyData.DaysOnMarket}, ${propertyData.ListedPrice}, 
-          ${propertyData.Description}, ${propertyData.LandArea}, 
-          ${propertyData.LastSoldDate}, ${propertyData.LastSoldPrice}, 
-          ${propertyData.LastSoldTranferID}, ${propertyData.Latitude}, ${propertyData.Longitude}
-        );
-      `;
-   console.log('New property inserted into the database');
-      } catch (dbError) {
-        console.error('Error inserting data into the database:', dbError);
-      }
-    });
-
-  } catch (error) {
-    console.error("Error fetching or inserting data:", error);
-    return response.status(500).json({ message: "Internal Server Error" });
-  }
-});
+    
 export default app;
 
