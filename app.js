@@ -18,11 +18,19 @@ console.log(process.env.API_KEY)
 let db;
 //const db = new Database(process.env.DATABASE_URL)
 async function connectToDb() {
-  if (!db) {
-    db = new Database(process.env.DATABASE_URL);
-    //await db.connect();
-    console.log("Successfully connected to SQLiteCloud.");
+  if (!db || !await db.isConnected()) {
+    try {
+      db = new Database(process.env.DATABASE_URL);
+      // Since SQLiteCloud automatically connects when you make a query,
+      // you don't need to manually connect, but let's ensure the connection is valid.
+      //await db.sql('SELECT *'); // Just making a simple query to check the connection.
+      console.log("Connected to the database");
+    } catch (error) {
+      console.error("Error during the connection:", error);
+      throw error;  // Rethrow the error after logging it
+    }
   }
+  return db;
 }
 // Ensure the table exists before handling requests
 async function createTableIfNotExists() {
