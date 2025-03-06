@@ -16,7 +16,7 @@ app.use(express.json())
 app.use(express.text())
 app.use(express.static('public'))
 console.log(process.env.API_KEY)
-const db = new Database(`sqlitecloud://ckwwhzstnk.g1.sqlite.cloud:8860/pricefinder?apikey=${process.env.APIKEY}`)
+const db = new Database({process.env.DATABASE_URL)
 // Ensure the table exists before handling requests
 async function createTableIfNotExists() {
   try {
@@ -112,7 +112,7 @@ app.get('/CoreLogic/:address', async (request, response) => {
     setImmediate(async () => {
       try {
         // Connect to the SQLiteCloud database
-        await db.connect()
+        //await db.connect()
         // Insert the property data into the properties table
         await db.sql`
         INSERT INTO properties (
