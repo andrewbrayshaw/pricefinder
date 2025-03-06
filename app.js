@@ -16,12 +16,28 @@ app.use(express.json())
 app.use(express.text())
 app.use(express.static('public'))
 console.log(process.env.API_KEY)
-const db = new Database(process.env.DATABASE_URL)
+//const db = new Database(process.env.DATABASE_URL)
+
+function getDatabase() {
+  if (!db || !db.isConnected()) {
+    db = new Database(process.env.DATABASE_URL, (error) => {
+      if (error) {
+        console.log("Error during the connection", error);
+      } else {
+        console.log("Connected to the database");
+      }
+    });
+  }
+
+  return db;
+}
+
+
 // Ensure the table exists before handling requests
 async function createTableIfNotExists() {
   try {
     // Execute the SQL query
-    await db.sql`
+    await getDatabase.sql`
     CREATE TABLE IF NOT EXISTS properties (
         ID INTEGER PRIMARY KEY AUTOINCREMENT, -- Automatically increments for each row
         CreatedAt DATE DEFAULT (CURRENT_DATE)
@@ -49,7 +65,7 @@ async function createTableIfNotExists() {
   }
 }
 // Create the table when the application starts
-createTableIfNotExists();
+//createTableIfNotExists();
 
 app.get('/CoreLogic/:address', async (request, response) => {
   const address = request.params.address
@@ -114,7 +130,7 @@ app.get('/CoreLogic/:address', async (request, response) => {
         // Connect to the SQLiteCloud database
         //await db.connect()
         // Insert the property data into the properties table
-        await db.sql`
+        await getDatabase.sql`
         INSERT INTO properties (
           CreatedAt, propertyID, Low_Estimate, High_Estimate, Estimate_Confidence, Valuation_Date,
           OtherDetails, DaysOnMarket, ListedPrice, Description, LandArea,
