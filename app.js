@@ -9,68 +9,17 @@ var corsOptions = {
   origin: whitelist,
   credentials: true
 };
+
 app.use(express.urlencoded({ extended: true }))
 app.use(cors(corsOptions))
 app.use(express.json())
 app.use(express.text())
 app.use(express.static('public'))
-//const db = new Database(process.env.DATABASE_URL)
 
-const db = new Database(process.env.DATABASE_URL)
-
+const db = new Database(process.env.APIKEY)
 const fetchAlbums = async () => await db.sql`USE DATABASE chinook.sqlite; SELECT * FROM albums;`;
 
 fetchAlbums().then((albums) => console.log(albums));
-
-//async function connectToDb() {
-//  if (!db || !await db.isConnected()) {
-//    try {
-//      db = new Database(process.env.DATABASE_URL);
-//      // Since SQLiteCloud automatically connects when you make a query,
-//      // you don't need to manually connect, but let's ensure the connection is valid.
-      //await db.sql('SELECT *'); // Just making a simple query to check the connection.
-//      console.log("Connected to the database");
-//    } catch (error) {
-//      console.error("Error during the connection:", error);
-//      throw error;  // Rethrow the error after logging it
-//    }
-//  }
-//  return db;
-//}
-// Ensure the table exists before handling requests
-//async function createTableIfNotExists() {
- // try {
-    // Execute the SQL query
- //   await connectToDb()
- //   await db.sql`
- //   CREATE TABLE IF NOT EXISTS properties (
-  //      ID INTEGER PRIMARY KEY AUTOINCREMENT, -- Automatically increments for each row
-   //     CreatedAt DATE DEFAULT (CURRENT_DATE)
-    //    propertyID INTEGER, -- Provided by external API
-    //    Low_Estimate INTEGER, -- Whole number (no decimals)
-     //   High_Estimate INTEGER, -- Whole number (no decimals)
-      //  Estimate_Confidence TEXT, -- High, Medium, Low (stored as text)
-       // Valuation_Date DATE, -- Date format (YYYY-MM-DD)
-      //  OtherDetails TEXT, -- Additional information (string)
-     //   DaysOnMarket INTEGER, -- Whole number (days on market)
-    ///    ListedPrice INTEGER, -- Whole number (no decimals)
-   //     Description TEXT, -- Description of the property
-   //     LandArea INTEGER, -- Land area in square meters, for example
-   //     LastSoldDate DATE, -- Date format (YYYY-MM-DD)
-   //     LastSoldPrice INTEGER, -- Last sold price (whole number)
-  //      LastSoldTranferID TEXT, -- Transfer ID of the last sale (string)
-  //      Latitude REAL, -- Latitude (decimal)
-  //      Longitude REAL -- Longitude (decimal)
-  //    );`//`SELECT * FROM customers LIMIT 10;`;
-
-    // Print the results
-    //console.log('Table "properties" is ready or already exists.');
- // } catch (error) {
- //   console.error('Error creating table:', error);
- // }/
-//}
-// Create the table when the application starts
-//createTableIfNotExists();
 
 app.get('/CoreLogic/:address', async (request, response) => {
   const address = request.params.address
@@ -122,14 +71,11 @@ app.get('/CoreLogic/:address', async (request, response) => {
       Latitude: json2.data.property.detail.geolocation.latitude,
       Longitude: json2.data.property.detail.geolocation.longitude
     };
-    // Send the response to the client immediately
-    response.json({
-      message: 'Property data received and inserted into the database',
-      propertyData
-    });
+  return response.json({ message: 'Property data inserted into the database', propertyData });
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return response.status(500).json({ message: "Internal Server Error" });
+  }
+})
 
-    // Now proceed to insert data into the database asynchronously after the response has been sent
-    // This operation is done asynchronously, so it doesn't block the response to the client
-    
-export default app;
-
+export default app
