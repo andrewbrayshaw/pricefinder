@@ -20,7 +20,7 @@ let db;
 async function connectToDb() {
   if (!db) {
     db = new Database(process.env.DATABASE_URL);
-    await db.connect();
+    //await db.connect();
     console.log("Successfully connected to SQLiteCloud.");
   }
 }
