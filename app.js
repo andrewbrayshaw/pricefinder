@@ -14,8 +14,6 @@ app.use(cors(corsOptions))
 app.use(express.json())
 app.use(express.text())
 app.use(express.static('public'))
-console.log(process.env.API_KEY)
-let db;
 //const db = new Database(process.env.DATABASE_URL)
 
 const db = new Database(process.env.DATABASE_URL)
