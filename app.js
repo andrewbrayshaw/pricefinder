@@ -701,28 +701,30 @@ app.get('/CoreLogic/:address', async (request, response) => {
   //console.log('New property inserted into the database');
   // Connect to the DB
      // Perform the database operations in the background asynchronously
-     (async () => {
-        try {
-          //const db = await connecttoDB();
-          const db = await getDbConnection();
-          // Ensure the table exists before inserting data
-          await createTableIfNotExists(db, keyMapping);
-          // Insert data into the database
-          await insertIntoProperties(db, propertyData, keyMapping);
-          // Close the DB connection after operation is done
-          //await db.close();
-          console.log('New property inserted into the database');
-        } catch (error) {
-          console.error("Error inserting data into the database:", error);
-        }
-      })();  // Immediately invoke the async function for database operation
+     //(async () => {
+     //   try {
+     //     //const db = await connecttoDB();
+     //     const db = await getDbConnection();
+     //     // Ensure the table exists before inserting data
+     //     await createTableIfNotExists(db, keyMapping);
+     //     // Insert data into the database
+     //     await insertIntoProperties(db, propertyData, keyMapping);
+     //     // Close the DB connection after operation is done
+     //     //await db.close();
+     //     console.log('New property inserted into the database');
+     //   } catch (error) {
+     //     console.error("Error inserting data into the database:", error);
+     //   }
+     // })();  // Immediately invoke the async function for database operation
   //return response.status(200).json({ message: 'Property data inserted into the database', propertyData });
   } catch (error) {
     console.error("Error fetching data:", error);
     return response.status(500).json({ message: "Internal Server Error" });
 }
 })
-
+app.listen(3000, () => {
+  console.log("Listening on port 3000")
+})
 
   
 //app.get('/ArcGIS/:address', async(request, response) => {
