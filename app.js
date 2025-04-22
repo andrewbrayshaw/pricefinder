@@ -30,7 +30,7 @@ let db; // Global database connection
 let dbConnection = null; 
 let inactivityTimer = null; // Timer to track inactivity
 const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes timeout
-
+// test
 // Function to get the DB connection
 async function getDbConnection() {
   //if (db) {
