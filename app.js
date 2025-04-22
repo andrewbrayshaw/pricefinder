@@ -722,9 +722,7 @@ app.get('/CoreLogic/:address', async (request, response) => {
     return response.status(500).json({ message: "Internal Server Error" });
 }
 })
-app.listen(3000, () => {
-  console.log("Listening on port 3000")
-})
+
 
   
 //app.get('/ArcGIS/:address', async(request, response) => {
