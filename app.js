@@ -213,7 +213,7 @@ async function connecttoDB() {
   const timeout = 20000 // Increase timeout to 10 seconds (default is often much lower)
   console.log('Starting database connection process...');
    // --- Construct the full connection string with parameters (adjust as needed) ---
-  const baseConnectionString = `process.env.APIKEY`
+  const baseConnectionString = `process.env.DATABASE_URL`//APIKEY
   if (!baseConnectionString) {
   throw new Error("APIKEY environment variable is not set.");
   } 
@@ -240,7 +240,7 @@ async function connecttoDB() {
       //if (!baseConnectionString) {
       //    throw new Error("APIKEY environment variable is not set.");
       //}
-      const db = new Database(`process.env.APIKEY`, options);
+      const db = new Database(`process.env.DATABASE_URL`, options); //APIKEY
       //console.log('Connected to SQLite Cloud successfully');
       // Listen for 'error' event on db
       db.on('error', (err) => {
