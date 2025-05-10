@@ -731,12 +731,12 @@ app.get('/CoreLogic/:address', async (request, response) => {
   //console.log('New property inserted into the database');
   // Connect to the DB
   (async () => {
-    try{
-      await insertProperty(propertyData, keyMapping)
+    //try{
+    //  await insertProperty(propertyData, keyMapping)
       
-    } catch (error) {
-      console.log("Error inserting into db")
-    }})()
+    //} catch (error) {
+    //  console.log("Error inserting into db")
+    //}})()
      // Perform the database operations in the background asynchronously
      //(async () => {
      //   try {
