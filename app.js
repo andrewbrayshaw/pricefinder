@@ -653,7 +653,7 @@ async function insertProperty(propertyData, keyMapping) {
   });
 
   try {
-    //await db.exec('USE DATABASE pricefinder;'); // Optional if needed
+    await db.exec('USE DATABASE pricefinder;'); // Optional if needed
 
     // Construct INSERT based on mapped keys
     const columns = Object.values(keyMapping).map(k => `"${k.replace(/[^a-zA-Z0-9_]/g, '')}"`).join(", ");
