@@ -700,6 +700,7 @@ app.get('/CoreLogic/:address', async (request, response) => {
     //await insertIntoProperties(propertyData, keyMapping);
   //console.log('New property inserted into the database');
   // Connect to the DB
+  (async () => {
     try{
       await insertProperty(propertyData, keyMapping)
       
