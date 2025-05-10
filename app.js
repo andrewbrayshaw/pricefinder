@@ -654,7 +654,12 @@ async function insertProperty(propertyData, keyMapping) {
 
   try {
     await db.exec('USE DATABASE pricefinder;'); // Optional if needed
-
+    try {
+      const result = await db.sql('SELECT 1;');
+      console.log('Database connection successful:', result);
+    } catch (err) {
+      console.error('Database connection failed:', err);
+    }
     // Construct INSERT based on mapped keys
     const columns = Object.values(keyMapping).map(k => `"${k.replace(/[^a-zA-Z0-9_]/g, '')}"`).join(", ");
     console.log(columns)
@@ -667,11 +672,10 @@ async function insertProperty(propertyData, keyMapping) {
   
     const query = `INSERT INTO properties (${columns}) VALUES (${placeholders});`;
     //await db.sql(query, ...values);
-    console.log(query)
-    console.log(values)
-    const insertData = async () => await db.sql(query, ...values);
-    console.log(insertData)
-    insertData().then((res) => console.log(res))
+    console.log('Executing query:', query);
+    console.log('With values:', values);
+    const result = await db.sql(query, ...values);
+    console.log('Insert result:', result);
     console.log('Insert successful for property:', propertyData['PropertyID']);
   } catch (err) {
     console.error('Error inserting into SQLite Cloud:', err);
