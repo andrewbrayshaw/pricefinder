@@ -665,9 +665,9 @@ async function insertProperty(propertyData, keyMapping) {
 
     const query = `INSERT INTO properties (${columns}) VALUES (${placeholders});`;
     //await db.sql(query, ...values);
-    await db.execute(query, values)
-
+    const insertData = async () => await db.sql(query, ...values);
     console.log('Insert successful for property:', propertyData['PropertyID']);
+    insertData().then((res) => console.log(res))
   } catch (err) {
     console.error('Error inserting into SQLite Cloud:', err);
     throw err;
