@@ -657,20 +657,22 @@ async function insertProperty(propertyData, keyMapping) {
 
     // Construct INSERT based on mapped keys
     const columns = Object.values(keyMapping).map(k => `"${k.replace(/[^a-zA-Z0-9_]/g, '')}"`).join(", ");
-    const placeholders = Object.values(keyMapping).map(() => '?').join(", ");
+    console.log(columns)
+    const placeholders = Object.values(keyMapping).map(() => '?').join(", ")
+    console.log(placeholders)  
     const values = Object.values(keyMapping).map(k => {
       const val = propertyData[k];
       return (val !== undefined && val !== null) ? val : 'N/A';
     });
-
+  
     const query = `INSERT INTO properties (${columns}) VALUES (${placeholders});`;
     //await db.sql(query, ...values);
     console.log(query)
     console.log(values)
     const insertData = async () => await db.sql(query, ...values);
     console.log(insertData)
-    console.log('Insert successful for property:', propertyData['PropertyID']);
     insertData().then((res) => console.log(res))
+    console.log('Insert successful for property:', propertyData['PropertyID']);
   } catch (err) {
     console.error('Error inserting into SQLite Cloud:', err);
     throw err;
