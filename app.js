@@ -645,6 +645,36 @@ async function fetchDataWithRetry(url, retries = 3, delay = 5000) {
     }
   }
 }
+async function insertProperty(propertyData, keyMapping) {
+  const dbUrl = process.env.DATABASE_URL;
+  const db = new Database(dbUrl, {
+    timeout: 30000,
+    tls: { rejectUnauthorized: true }
+  });
+
+  try {
+    //await db.exec('USE DATABASE pricefinder;'); // Optional if needed
+
+    // Construct INSERT based on mapped keys
+    const columns = Object.values(keyMapping).map(k => `"${k.replace(/[^a-zA-Z0-9_]/g, '')}"`).join(", ");
+    const placeholders = Object.values(keyMapping).map(() => '?').join(", ");
+    const values = Object.values(keyMapping).map(k => {
+      const val = propertyData[k];
+      return (val !== undefined && val !== null) ? val : 'N/A';
+    });
+
+    const query = `INSERT INTO properties (${columns}) VALUES (${placeholders});`;
+    //await db.sql(query, ...values);
+    await db.execute(query, values)
+
+    console.log('Insert successful for property:', propertyData['PropertyID']);
+  } catch (err) {
+    console.error('Error inserting into SQLite Cloud:', err);
+    throw err;
+  } finally {
+    await db.close(); // Always clean up!
+  }
+}
 
 app.get('/CoreLogic/:address', async (request, response) => {
   const address = request.params.address
@@ -764,33 +794,5 @@ app.get('/CoreLogic/:address', async (request, response) => {
 //  response.json(json)
 //
 //})
-async function insertProperty(propertyData, keyMapping) {
-  const dbUrl = process.env.DATABASE_URL;
-  const db = new Database(dbUrl, {
-    timeout: 30000,
-    tls: { rejectUnauthorized: true }
-  });
 
-  try {
-    await db.exec('USE DATABASE pricefinder;'); // Optional if needed
-
-    // Construct INSERT based on mapped keys
-    const columns = Object.values(keyMapping).map(k => `"${k.replace(/[^a-zA-Z0-9_]/g, '')}"`).join(", ");
-    const placeholders = Object.values(keyMapping).map(() => '?').join(", ");
-    const values = Object.values(keyMapping).map(k => {
-      const val = propertyData[k];
-      return (val !== undefined && val !== null) ? val : 'N/A';
-    });
-
-    const query = `INSERT INTO properties (${columns}) VALUES (${placeholders});`;
-    await db.sql(query, ...values);
-
-    console.log('Insert successful for property:', propertyData['PropertyID']);
-  } catch (err) {
-    console.error('Error inserting into SQLite Cloud:', err);
-    throw err;
-  } finally {
-    await db.close(); // Always clean up!
-  }
-}
 export default app
