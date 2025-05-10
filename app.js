@@ -665,7 +665,10 @@ async function insertProperty(propertyData, keyMapping) {
 
     const query = `INSERT INTO properties (${columns}) VALUES (${placeholders});`;
     //await db.sql(query, ...values);
+    console.log(query)
+    console.log(values)
     const insertData = async () => await db.sql(query, ...values);
+    console.log(insertData)
     console.log('Insert successful for property:', propertyData['PropertyID']);
     insertData().then((res) => console.log(res))
   } catch (err) {
