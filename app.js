@@ -653,9 +653,9 @@ async function insertProperty(propertyData, keyMapping) {
   });
 
   try {
-    await db.exec('USE DATABASE pricefinder;'); // Optional if needed
+    await db.sql('USE DATABASE pricefinder;'); // Optional if needed
     try {
-      const result = await db.sql('SELECT 1;');
+      const result = await db.sql('SELECT * FROM properties LIMIT 3;');
       console.log('Database connection successful:', result);
     } catch (err) {
       console.log('Database connection failed:', err);
@@ -674,7 +674,8 @@ async function insertProperty(propertyData, keyMapping) {
     //await db.sql(query, ...values);
     console.log('Executing query:', query);
     console.log('With values:', values);
-    await db.sql(query, ...values);
+    const myinsertdata = await db.sql(query, ...values);
+    console.log(myinsertdata)
     //console.log('Insert result:', result);
     console.log('Insert successful for property:', propertyData['PropertyID']);
   } catch (err) {
