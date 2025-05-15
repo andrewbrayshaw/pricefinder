@@ -1,9 +1,3 @@
-
-//const connection = new SQLiteCloudConnection({
-//  });
-////const result = db.sql`SELECT * FROM <tablename>;`;
-//const db = new Database(process.env.APIKEY)
-//const fetchAlbums = async () => await db.sql`USE DATABASE chinook.sqlite; SELECT * FROM albums;`;
 import express from "express"
 import cors from "cors"
 import fetch from 'node-fetch'
