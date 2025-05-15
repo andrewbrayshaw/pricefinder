@@ -669,7 +669,6 @@ async function insertProperty(propertyData, keyMapping) {
       const val = propertyData[k];
       return (val !== undefined && val !== null) ? val : 'N/A';
     });
-  
     const query = `INSERT INTO properties (${columns}) VALUES (${placeholders});`;
     //await db.sql(query, ...values);
     console.log('Executing query:', query);
