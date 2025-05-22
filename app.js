@@ -56,151 +56,6 @@ function resetInactivityTimer() {
   }, INACTIVITY_TIMEOUT);
 }
 
-//async function connecttoDB() {
-//  let retries = 3;
-//  const initialDelay = 5000; // Start with 5 seconds delay
-//  let currentDelay = initialDelay;
-//  const maxDelay = 30000; // Max delay 30 seconds
-//  const connectTimeout = 20000; // Timeout for a single connection attempt (ms)
-//  console.log('Starting database connection process...');
-//   // --- Construct the full connection string with parameters (adjust as needed) ---
-
-//  if (!baseConnectionString) {
-//  throw new Error("APIKEY environment variable is not set.");
-//  } 
-//  //const baseConnectionString = process.env.APIKEY;
-//  const separator = baseConnectionString.includes('?') ? '&' : '?';
-//  // Check SQLite Cloud docs for correct parameter names for timeout and TLS
-//  const fullConnectionString = `${baseConnectionString}`//timeout=${connectTimeout}&tls=true`//${separator}timeout=${connectTimeout}&tls=true`;
-//  //const fullConnectionString = `${baseConnectionString}$`;
-//  console.log('Using connection string:', fullConnectionString); // Careful logging sensitive info
-//  while (retries > 0) {
-//    console.log(`Attempting connection... (Attempt ${4 - retries} of 3), Timeout: ${connectTimeout}ms`);
-//    let attemptSuccessful = false;
-//    try {
-//        const db = await new Promise((resolve, reject) => {
-//            let connectionTimer = null;
-//            let dbInstance = null;
-//            let errorListener = null;
-//            let readyListener = null; // Or 'connect', 'open', etc. based on driver
-//
-//            const cleanup = () => {
-//                if (connectionTimer) clearTimeout(connectionTimer);
-//                if (dbInstance) {
-//                    // Remove specific listeners attached during setup
-//                    if (errorListener) dbInstance.removeListener('error', errorListener);
-//                    if (readyListener) dbInstance.removeListener('ready', readyListener); // Use correct event name
-//                }
-//            };
-//
-//            // Define the error handler for the setup phase
-//            errorListener = (err) => {
-//                console.error(`Connection setup error event: Code='${err.code}', Message='${err.message}'`);
-//                cleanup();
-//                // Reject the promise, passing the error object
-//                reject(err);
-//            };
-//
-//            // Define the success handler (!! CHECK DRIVER DOCS FOR CORRECT EVENT NAME !!)
-//            // Common names: 'ready', 'connect', 'open'
-//            const successEventName = 'ready'; // <--- !!! REPLACE 'ready' if needed !!!
-//            readyListener = () => {
-//                console.log(`Driver emitted '${successEventName}' event.`);
-//                cleanup();
-//
-//                // Attach the persistent runtime error listener AFTER successful connection
-//                dbInstance.on('error', (runtimeErr) => {
-//                    console.error('Database connection runtime error:', runtimeErr);
-//                    // Invalidate global connection if this instance is the active one
-//                    if (dbConnection === dbInstance) {
-//                        console.log("Invalidating global DB connection due to runtime error.");
-//                        if (inactivityTimer) clearTimeout(inactivityTimer);
-//                        dbConnection = null;
-//                    }
-//                });
-//
-//                resolve(dbInstance); // Connection succeeded
-//            };
-//
-//            // Start the connection timeout timer
-//            connectionTimer = setTimeout(() => {
-//                console.error(`Connection attempt timed out after ${connectTimeout}ms.`);
-//                cleanup();
-//                 // Explicitly close if instance exists but didn't connect/error
-//                //if (dbInstance && typeof dbInstance.close === 'function') {
-//                //    dbInstance.close().catch(closeErr => console.error("Error closing timed-out instance:", closeErr));
-//                //}
-//                reject(new Error(`Connection attempt timed out after ${connectTimeout}ms`));
-//            }, connectTimeout);
-//
-//            try {
-//                // Instantiate the database object
-//                console.log("Instantiating Database object...");
-//                dbInstance = new Database(fullConnectionString);
-//
-//                // Attach listeners using .once() - they automatically detach after firing
-//                console.log(`Attaching .once('${successEventName}') and .once('error') listeners.`);
-//                dbInstance.once(successEventName, readyListener);
-//                dbInstance.once('error', errorListener);
-//
-//                // If the constructor itself can throw synchronously (less likely for network)
-//            } catch (constructorError) {
-//                console.error("Error during Database constructor:", constructorError);
-//                cleanup();
-//                reject(constructorError); // Reject the promise
-//            }
-//        });
-//
-//        // If the promise above resolved successfully:
-//        console.log(`Connection appears successful! (Attempt ${4 - retries})`);
-//        attemptSuccessful = true;
-//        currentDelay = initialDelay; // Reset delay on success
-//        return db; // Return the connected instance
-//
-//    } catch (error) {
-//        // This catch block handles rejections from the promise
-//        console.error(`Connection attempt ${4 - retries} failed: ${error.message}`);
-//
-//        // *** Specifically check for ECONNRESET ***
-//        if (error.code === 'ECONNRESET') {
-//            console.log("ECONNRESET detected. Will retry.");
-//            // Proceed with retry logic below
-//        } else if (error.message && error.message.includes('timed out')) {
-//            console.log("Connection attempt timed out. Will retry.");
-//             // Proceed with retry logic below
-//        } else {
-//            // Optional: Decide if other errors should stop retries immediately
-//            // Example: Authentication errors, invalid connection string errors
-//            // if (error.message.includes('Authentication failed')) {
-//            //    console.error("Authentication failed. Aborting retries.");
-//            //    throw error; // Re-throw immediately to stop retries
-//            // }
-//            console.log("Caught other connection error. Will retry.");
-//            // Proceed with retry logic below for now
-//        }
-//
-//        retries--; // Decrement retries *only* after a failure
-//
-//        if (retries === 0) {
-//            console.error('Max connection retries reached. Unable to establish database connection.');
-//            throw new Error(`Unable to connect after multiple attempts. Last error: ${error.message}`); // Throw final error
-//        }
-//
-//        // Apply exponential backoff with jitter
-//        const jitter = Math.random() * 1000; // Add up to 1 second jitter
-//        const delayWithBackoff = Math.min(currentDelay + jitter, maxDelay);
-//        console.log(`Retrying connection in approximately ${(delayWithBackoff / 1000).toFixed(1)} seconds...`);
-//        await new Promise(resolve => setTimeout(resolve, delayWithBackoff));
-//        currentDelay = Math.min(currentDelay * 2, maxDelay); // Double delay for next time, capped
-//
-//    }
-//    // The loop continues if retries > 0 and no success/fatal error occurred
-//}
-// Fallback if loop somehow exits unexpectedly
-//throw new Error("Database connection failed after exhausting retries.");
-//}
-
-
 async function connecttoDB() {
   let retries = 3;
   const delay = 5000; // 5 seconds delay between retries
@@ -560,65 +415,7 @@ async function createTableIfNotExists(db, keyMapping, retries = 3, delay = 2000)
 //}
 
 // Insert function for SQLite database
-async function insertIntoProperties(db, propertyData, keyMapping, retries = 3, delay = 2000) {
-  try {
-    const mappedDbColumnNames = Object.values(keyMapping);
-    const columnsSql = mappedDbColumnNames.map(name => `"${name.replace(/[^a-zA-Z0-9_]/g, '')}"`).join(", ");
-    const placeholdersSql = mappedDbColumnNames.map(() => '?').join(", ");
 
-    // Prepare the array of values by looking up data using DB column names in propertyData
-    const values = mappedDbColumnNames.map(dbColumnName => {
-      const value = propertyData[dbColumnName]; // Use the DB column name as the key here
-      return (value !== undefined && value !== null) ? value : 'N/A';
-    });
-
-    const insertQuery = `
-      INSERT INTO properties (${columnsSql})
-      VALUES (${placeholdersSql});
-    `;
-  //  const mappedKeys = Object.values(keyMapping);
-  //  const columns = mappedKeys.join(", ");
-  //  const placeholders = mappedKeys.map(() => '?').join(", "); // Generate ?, ?, ...
-//
-  //  const values = Object.values(keyMapping).map(mappedKey => {
-  //    return propertyData[mappedKey] !== undefined && propertyData[mappedKey] !== null
-  //      ? String(propertyData[mappedKey]) // Ensure values are strings if columns are TEXT
-  //      : 'N/A';
-  //  });
-//
-  //  const insertQuery = `
-  //    INSERT INTO properties (${columns})
-  //    VALUES (${placeholders});
-  //  `;
-  //  //const columns = Object.values(keyMapping).join(", ");
-    //const values = Object.keys(keyMapping).map(keyPath => {
-    //  //return getNestedValue(propertyData, keyPath);
-    //  // Fetch the value from the propertyData, directly using the mapped key
-    //  return propertyData[keyMapping[keyPath]] !== undefined && propertyData[keyMapping[keyPath]] !== null 
-    //    ? propertyData[keyMapping[keyPath]] 
-    //    : 'N/A'; // If the value is missing, insert 'N/A'
-    //});
-    //const insertQuery = `
-    //  INSERT INTO properties (${columns})
-    //  VALUES (${values.map(value => `'${value}'`).join(", ")});
-    //`;
-    //await db.sql(insertQuery);
-    await db.run(insertQuery, values) // Use run() with parameters to avoid SQL injection
-    //await db.close();
-    const successfulRetries = 3 - retries;
-    //console.log(`Data inserted successfully. `);
-    console.log(`Data inserted successfully for PropertyID: ${propertyData['PropertyID'] || 'Unknown'}. Retries taken: ${successfulRetries}`);
-  } catch (error) {
-      if (retries > 0) {
-      console.error(`Error inserting data: ${error.message}. Retrying in ${delay / 1000} seconds...`);
-      await new Promise(resolve => setTimeout(resolve, delay)); // Wait before retry
-      return insertIntoProperties(db, propertyData, keyMapping, retries - 1, delay * 2); // Exponential backoff
-    } else {
-      console.error(`Error inserting data after multiple retries (PropertyID: ${propertyData['PropertyID'] || 'Unknown'}):`, error);
-      throw new Error('Unable to insert data after multiple retries');
-    }
-  }
-}
 // Helper function to handle retries for API requests
 async function fetchDataWithRetry(url, retries = 3, delay = 5000) {
   while (retries > 0) {
@@ -728,6 +525,17 @@ app.get('/CoreLogic/:address', async (request, response) => {
     console.log(propertyData)
     // Immediately send the response back to the client
     //return response.status(200).json({ message: 'Property data fetched', propertyData });
+    // *** MODIFICATION: Call and await insertProperty BEFORE sending response ***
+    try {
+      // Pass the transformed data and the keyMapping
+      // The keyMapping's values are used by insertProperty to pick values from dataForDatabaseInsert
+      await insertProperty(propertyData, keyMapping); 
+      console.log("Database insertion process completed successfully for PropertyID:", propertyData.PropertyID || add_id);
+    } catch (dbError) {
+      // Log the error, but don't let it stop the client response if you still want to send API data.
+      // However, for critical data, you might reconsider this.
+      console.error("Failed to insert property data into database for PropertyID:", (propertyData.PropertyID || add_id), dbError.message);
+    }
     response.status(200).json({ message: 'Property data fetched', propertyData });
     //// Insert data into the database
     //await insertIntoProperties(propertyData, keyMapping);
