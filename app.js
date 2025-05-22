@@ -526,16 +526,14 @@ app.get('/CoreLogic/:address', async (request, response) => {
     // Immediately send the response back to the client
     //return response.status(200).json({ message: 'Property data fetched', propertyData });
     // *** MODIFICATION: Call and await insertProperty BEFORE sending response ***
-    try {
+    //try {
       // Pass the transformed data and the keyMapping
       // The keyMapping's values are used by insertProperty to pick values from dataForDatabaseInsert
-      await insertProperty(propertyData, keyMapping); 
-      console.log("Database insertion process completed successfully for PropertyID:", propertyData.PropertyID || add_id);
-    } catch (dbError) {
-      // Log the error, but don't let it stop the client response if you still want to send API data.
-      // However, for critical data, you might reconsider this.
-      console.error("Failed to insert property data into database for PropertyID:", (propertyData.PropertyID || add_id), dbError.message);
-    }
+   //   await insertProperty(propertyData, keyMapping); 
+   //   console.log("Database insertion process completed successfully for PropertyID:", propertyData.PropertyID || add_id);
+   // } catch (dbError) {
+   //   console.error("Failed to insert property data into database for PropertyID:", (propertyData.PropertyID || add_id), dbError.message);
+  //  }
     response.status(200).json({ message: 'Property data fetched', propertyData });
     //// Insert data into the database
     //await insertIntoProperties(propertyData, keyMapping);
