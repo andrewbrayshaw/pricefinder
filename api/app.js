@@ -43,7 +43,7 @@ async function fetchDataWithRetry(url, retries = 3, delay = 5000) {
 
 let tableEnsured = false;
 async function ensureTableSchema() {
- if (!tableEnsured && DATABASE_URL) {
+ if (!tableEnsured && process.env.DATABASE_URL) {
      console.log("Performing one-time table schema check/creation...");
      let dbInstance = null;
      try {
