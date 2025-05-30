@@ -40,11 +40,33 @@ async function fetchDataWithRetry(url, retries = 3, delay = 5000) {
   }
 }
 
+
+let tableEnsured = false;
+async function ensureTableSchema() {
+ if (!tableEnsured && DATABASE_URL) {
+     console.log("Performing one-time table schema check/creation...");
+     let dbInstance = null;
+     try {
+         dbInstance = new Database(process.env.DATABASE_URL, { timeout: 10000, tls: { rejectUnauthorized: true } });
+         const dbName = process.env.SQLITECLOUD_DB_NAME || "pricefinder";
+         await dbInstance.sql(`USE DATABASE ${dbName};`);
+         await createTableIfNotExists(dbInstance, keyMapping);
+         tableEnsured = true; // Mark as ensured for this warm instance
+         console.log("One-time table schema check/creation completed.");
+     } catch (error) {
+         console.error("Failed one-time table schema check/creation:", error);
+         // tableEnsured remains false, will retry on next suitable invocation
+     } finally {
+         if (dbInstance) await dbInstance.close();
+     }
+ }
+}
+
 app.get('/CoreLogic/:address', async (request, response) => {
   const address = request.params.address
   console.log("Request received for ", address)
   const api_url = `https://digital-api.stgeorge.com.au/property-insights?q=${address}`;
-  
+  await ensureTableSchema(); // Attempt to ensure table exists (best effort for serverless)
   try {
     const fetch_response = await fetch(api_url);
     //const fetch_response = await fetchDataWithRetry(api_url);
@@ -90,6 +112,7 @@ app.get('/CoreLogic/:address', async (request, response) => {
     try {
       // Pass the transformed data and the keyMapping
       // The keyMapping's values are used by insertProperty to pick values from dataForDatabaseInsert
+      //await createTableIfNotExists(dbInstance, coreLogicApiToDbKeyMap);
       await insertProperty(propertyData, keyMapping); 
       console.log("Database insertion process completed successfully for PropertyID:", propertyData.PropertyID || add_id);
     } catch (dbError) {
