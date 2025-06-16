@@ -118,7 +118,7 @@ app.get('/CoreLogic/:address', async (request, response) => {
     // Pass the transformed data and the keyMapping
     // The keyMapping's values are used by insertProperty to pick values from dataForDatabaseInsert
     //await createTableIfNotExists(dbInstance, coreLogicApiToDbKeyMap);
-    if (MONGODB_URI) {
+    if (process.env.MONGODB_URI) {
       try {
         console.log(`Attempting MongoDB upsert for ${propertyID}... (after client response, will await).`);
         await insertOrUpdateProperty(propertyData, keyMapping)
