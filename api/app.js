@@ -2,10 +2,9 @@ import express from "express"
 import cors from "cors"
 import fetch from 'node-fetch'
 import { keyMapping } from '../lib/config/keyMappings.js';
-import { insertOrUpdateProperty, ensurePropertyCollectionIndexes } from '../lib/services/databaseService.js'
+import { insertProperty, createTableIfNotExists } from '../lib/services/databaseService.js'
 import { buildPropertyData } from '../lib/services/dataTransformer.js';
 import { Database } from "@sqlitecloud/drivers"; // For one-time table creation
-import { MongoClient, ServerApiVersion } from "mongodb"
 
 const app = express()
 var whitelist = process.env.whitelist
@@ -41,38 +40,33 @@ async function fetchDataWithRetry(url, retries = 3, delay = 5000) {
   }
 }
 
-let mongoIndexesEnsured = false;
-let ensureMongoIndexesInProgress = false;
 
-async function performInitialMongoSetup() {
-    if (mongoIndexesEnsured || ensureMongoIndexesInProgress) {
-        return; // Already done or in progress for this warm instance
-    }
-    const MONGODB_URI = process.env.MONGODB_URI 
-    if (!MONGODB_URI) { // Check if MongoDB is configured before attempting setup
-        console.warn("[MONGO_SETUP_HANDLER] MONGODB_URI not set. Skipping MongoDB index creation.");
-        return;
-    }
-    ensureMongoIndexesInProgress = true;
-    console.log("[MONGO_SETUP_HANDLER] Attempting one-time MongoDB index creation/check...");
-    try {
-        // Pass the keyMapping so ensurePropertyCollectionIndexes knows which field
-        // corresponds to "PropertyID" (or your unique business key) for the unique index.
-        await ensurePropertyCollectionIndexes(keyMapping);
-        mongoIndexesEnsured = true;
-        console.log("[MONGO_SETUP_HANDLER] MongoDB index creation/check completed successfully.");
-    } catch (error) {
-        console.error("[MONGO_SETUP_HANDLER] Failed one-time MongoDB index creation/check:", error.message, error.stack);
-        // mongoIndexesEnsured remains false, will retry on next suitable invocation of a new/recycled instance
-    } finally {
-        ensureMongoIndexesInProgress = false;
-    }
+let tableEnsured = false;
+async function ensureTableSchema() {
+ if (!tableEnsured && process.env.DATABASE_URL) {
+     console.log("Performing one-time table schema check/creation...");
+     let dbInstance = null;
+     try {
+         dbInstance = new Database(process.env.DATABASE_URL, { timeout: 10000, tls: { rejectUnauthorized: true } });
+         const dbName = process.env.SQLITECLOUD_DB_NAME || "pricefinder";
+         await dbInstance.sql(`USE DATABASE ${dbName};`);
+         await createTableIfNotExists(dbInstance, keyMapping);
+         tableEnsured = true; // Mark as ensured for this warm instance
+         console.log("One-time table schema check/creation completed.");
+     } catch (error) {
+         console.error("Failed one-time table schema check/creation:", error);
+         // tableEnsured remains false, will retry on next suitable invocation
+     } finally {
+         if (dbInstance) await dbInstance.close();
+     }
+ }
 }
+
 app.get('/CoreLogic/:address', async (request, response) => {
   const address = request.params.address
   console.log("Request received for ", address)
   const api_url = `https://digital-api.stgeorge.com.au/property-insights?q=${address}`;
-  await performInitialMongoSetup();
+  await ensureTableSchema(); // Attempt to ensure table exists (best effort for serverless)
   try {
     const fetch_response = await fetch(api_url);
     //const fetch_response = await fetchDataWithRetry(api_url);
@@ -86,15 +80,15 @@ app.get('/CoreLogic/:address', async (request, response) => {
       return response.status(404).json({ message: "No results found for the address" });
     }
     // Proceed with accessing the first result since it's guaranteed to exist
-    const propertyID = json.data.results[0]?.propertyId;
+    const add_id = json.data.results[0]?.propertyId;
     //const add_id = fetch_response.data.results[0]?.propertyId;
-    if (!propertyID) {
+    if (!add_id) {
       //console.log("Property ID not found");
       return response.status(400).json({ message: "Property ID not found" });
     }
-    console.log("Property ID:", propertyID);
+    console.log("Property ID:", add_id);
 
-    const api_url2 = `https://digital-api.stgeorge.com.au/property-insights/property/${propertyID}?` //add_id}?`
+    const api_url2 = `https://digital-api.stgeorge.com.au/property-insights/property/${add_id}?` //add_id}?`
     const fetch_response2 = await fetch(api_url2);
     //const fetch_response2 = await fetchDataWithRetry(api_url2);
     console.log(fetch_response2.ok)
@@ -115,22 +109,15 @@ app.get('/CoreLogic/:address', async (request, response) => {
     // Immediately send the response back to the client
     //return response.status(200).json({ message: 'Property data fetched', propertyData });
     // *** MODIFICATION: Call and await insertProperty BEFORE sending response ***
-  
-    // Pass the transformed data and the keyMapping
-    // The keyMapping's values are used by insertProperty to pick values from dataForDatabaseInsert
-    //await createTableIfNotExists(dbInstance, coreLogicApiToDbKeyMap);
-    const MONGODB_URI = process.env.MONGODB_URI
-    if (MONGODB_URI) {
-      try {
-        console.log(`Attempting MongoDB upsert for ${propertyID}... (after client response, will await).`);
-        await insertOrUpdateProperty(propertyData, keyMapping)
-        console.log(`MongoDB upsert successful (awaited) for ...`);
-      } catch (dbError) {
-        // This error won't go to the client, as response is already sent.
-        console.error(`MongoDB upsert FAILED (awaited) for ${propertyID}...:`, dbError.message, dbError.stack);
-      }
+    try {
+      // Pass the transformed data and the keyMapping
+      // The keyMapping's values are used by insertProperty to pick values from dataForDatabaseInsert
+      //await createTableIfNotExists(dbInstance, coreLogicApiToDbKeyMap);
+      await insertProperty(propertyData, keyMapping); 
+      console.log("Database insertion process completed successfully for PropertyID:", propertyData.PropertyID || add_id);
+    } catch (dbError) {
+      console.error("Failed to insert property data into database for PropertyID:", (propertyData.PropertyID || add_id), dbError.message);
     }
-  
     response.status(200).json({ message: 'Property data fetched', propertyData });
  } catch (error) {
     console.error("Error fetching data:", error);
