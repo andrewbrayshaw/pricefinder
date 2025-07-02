@@ -125,17 +125,20 @@ app.get('/CoreLogic/:address', async (request, response) => {
     // *** MODIFICATION: Call and await insertProperty BEFORE sending response ***
     if (isDbConnectionHealthy){
       try {
-      // Pass the transformed data and the keyMapping
-      // The keyMapping's values are used by insertProperty to pick values from dataForDatabaseInsert
-      //await createTableIfNotExists(dbInstance, coreLogicApiToDbKeyMap);
+        // The insertProperty function has its own connection logic. 
+        // If the DB is down, it will throw an error here.
         await insertProperty(propertyData, keyMapping); 
         console.log("Database insertion process completed successfully for PropertyID:", propertyData.PropertyID || add_id);
       } catch (dbError) {
+        // THIS IS THE KEY PART FOR SKIPPING.
+        // We catch the error from insertProperty, log it, and move on.
+        // We do NOT `return` or `throw` here.
         console.error("Failed to insert property data into database for PropertyID:", (propertyData.PropertyID || add_id), dbError.message);
       }
-    else {
-      console.log('Skipping database insert due to earlier connection failure.')'
+    } else {
+        console.log('Skipping database insert due to earlier connection failure.')'
     }
+  
     response.status(200).json({ message: 'Property data fetched', propertyData });
  } catch (error) {
     console.error("Error fetching data:", error);
