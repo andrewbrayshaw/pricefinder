@@ -57,22 +57,53 @@ async function ensureTableSchema() {
   //let dbInstance = null;
   //if (!tableEnsured && process.env.DATABASE_URL) {
   //console.log("Performing one-time table schema check/creation...");
-  let dbInstance = null;
-  try {
-    dbInstance = new Database(process.env.DATABASE_URL, { timeout: 15000, tls: { rejectUnauthorized: true } });
-    const dbName = process.env.SQLITECLOUD_DB_NAME //|| "pricefinder";
-    await dbInstance.sql(`USE DATABASE ${dbName};`);
-    await createTableIfNotExists(dbInstance, keyMapping);
-    tableEnsured = true; // Mark as ensured for this warm instance
-    console.log("One-time table schema check/creation completed.");
-  } catch (error) {
-    console.error("Failed one-time table schema check/creation:", error);
-    // tableEnsured remains false, will retry on next suitable invocation
-    isDbConnectionHealthy = false; 
-  } finally {
-    if (dbInstance) await dbInstance.close();
+  
+  let retries = 3
+  let delay = 2000
+  while (retries > 0){
+    console.log(`Attempting schema check (Attempt ${4 - retries}/${3})...`)
+    let dbInstance = null;
+    try {
+      dbInstance = new Database(process.env.DATABASE_URL, { timeout: 15000, tls: { rejectUnauthorized: true } });
+      const dbName = process.env.SQLITECLOUD_DB_NAME //|| "pricefinder";
+      await dbInstance.sql(`USE DATABASE ${dbName};`);
+      await createTableIfNotExists(dbInstance, keyMapping);
+      tableEnsured = true; // Mark as ensured for this warm instance
+      isDbConnectionHealthy = true; // Mark as healthy
+      console.log("One-time table schema check/creation completed.");
+      if (dbInstance) await dbInstance.close()
+      return; // exit
+    } catch (error) {
+      if (dbInstance) {
+          try { await dbInstance.close(); } catch (closeErr) { /* ignore */ }
+      }
+      retries--; //Decrement retries
+      console.error(`Failed one-time table schema check/creation: ${error}, ${error.message}. Retries left: ${retries}`);
+      // If it's a different error (e.g., syntax error in SQL), don't retry.
+      if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT' || error.message.includes('timeout')) {
+          if (retries > 0) {
+              console.log(`Retrying in ${delay / 1000} seconds...`);
+              await new Promise(resolve => setTimeout(resolve, delay));
+              delay *= 2; // Exponential backoff: 1s, 2s, 4s...
+          }
+      } else {
+          // For non-retriable errors (like a SQL syntax error), break the loop immediately.
+          console.error("Non-retriable error encountered. Aborting schema check retries.");
+          retries = 0; // Or simply `break;`
+      }
+    }
   }
-}
+  // If the loop finishes without a successful return, it means all retries failed.
+  console.error("FAILED one-time table schema check after all retries.");
+  isDbConnectionHealthy = false; // Mark DB as unhealthy for this instance   
+  //    // tableEnsured remains false, will retry on next suitable invocation
+  //    isDbConnectionHealthy = false; 
+//
+  //  } finally {
+  //    if (dbInstance) await dbInstance.close();
+  //  }
+  //}
+}//
 
 app.get('/CoreLogic/:address', async (request, response) => {
   const address = request.params.address
