@@ -56,23 +56,22 @@ async function ensureTableSchema() {
   console.log("Performing one-time table schema check/creation...");
   //let dbInstance = null;
   //if (!tableEnsured && process.env.DATABASE_URL) {
-     //console.log("Performing one-time table schema check/creation...");
+  //console.log("Performing one-time table schema check/creation...");
    //  let dbInstance = null;
-   try {
-       dbInstance = new Database(process.env.DATABASE_URL, { timeout: 15000, tls: { rejectUnauthorized: true } });
-       const dbName = process.env.SQLITECLOUD_DB_NAME //|| "pricefinder";
-       await dbInstance.sql(`USE DATABASE ${dbName};`);
-       await createTableIfNotExists(dbInstance, keyMapping);
-       tableEnsured = true; // Mark as ensured for this warm instance
-       console.log("One-time table schema check/creation completed.");
-   } catch (error) {
-       console.error("Failed one-time table schema check/creation:", error);
-       // tableEnsured remains false, will retry on next suitable invocation
-       isDbConnectionHealthy = false; 
-   } finally {
-       if (dbInstance) await dbInstance.close();
-   }
- }
+  try {
+    dbInstance = new Database(process.env.DATABASE_URL, { timeout: 15000, tls: { rejectUnauthorized: true } });
+    const dbName = process.env.SQLITECLOUD_DB_NAME //|| "pricefinder";
+    await dbInstance.sql(`USE DATABASE ${dbName};`);
+    await createTableIfNotExists(dbInstance, keyMapping);
+    tableEnsured = true; // Mark as ensured for this warm instance
+    console.log("One-time table schema check/creation completed.");
+  } catch (error) {
+    console.error("Failed one-time table schema check/creation:", error);
+    // tableEnsured remains false, will retry on next suitable invocation
+    isDbConnectionHealthy = false; 
+  } finally {
+    if (dbInstance) await dbInstance.close();
+  }
 }
 
 app.get('/CoreLogic/:address', async (request, response) => {
@@ -143,7 +142,7 @@ app.get('/CoreLogic/:address', async (request, response) => {
  } catch (error) {
     console.error("Error fetching data:", error);
     return response.status(500).json({ message: "Internal Server Error" });
-}
-})
+  }
+});
 
 export default app
