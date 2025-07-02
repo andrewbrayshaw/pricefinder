@@ -57,7 +57,7 @@ async function ensureTableSchema() {
   //let dbInstance = null;
   //if (!tableEnsured && process.env.DATABASE_URL) {
   //console.log("Performing one-time table schema check/creation...");
-   //  let dbInstance = null;
+  let dbInstance = null;
   try {
     dbInstance = new Database(process.env.DATABASE_URL, { timeout: 15000, tls: { rejectUnauthorized: true } });
     const dbName = process.env.SQLITECLOUD_DB_NAME //|| "pricefinder";
