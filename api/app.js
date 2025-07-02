@@ -136,7 +136,7 @@ app.get('/CoreLogic/:address', async (request, response) => {
         console.error("Failed to insert property data into database for PropertyID:", (propertyData.PropertyID || add_id), dbError.message);
       }
     } else {
-        console.log('Skipping database insert due to earlier connection failure.')'
+        console.log('Skipping database insert due to earlier connection failure.')
     }
   
     response.status(200).json({ message: 'Property data fetched', propertyData });
